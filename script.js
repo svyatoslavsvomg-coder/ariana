@@ -4,7 +4,7 @@ const CONFIG = {
   herName: "Ариана",
   herNameCute: "Арианочка",
   yourName: "твой …", // поменяй на своё имя
-  dateLabel: "С Днём Рождения"
+  dateLabel: "С Днём Рождения",
 };
 
 const compliments = [
@@ -22,7 +22,7 @@ const compliments = [
   "Ты умная, сильная и одновременно очень ласковая.",
   "Мне нравится в тебе всё: от голоса до характера.",
   "Ты — та, рядом с кем хочется становиться лучше.",
-  "Ты умеешь любить по‑настоящему.",
+  "Ты умеешь любить по-настоящему.",
   "Ты очень стильная и такая «твоя» — особенная.",
   "Твоя забота — это лучший подарок.",
   "Ты — мой дом и моё спокойствие.",
@@ -110,292 +110,373 @@ const galleryItems = [
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-function setText(id, value){
+function setText(id, value) {
   const el = document.getElementById(id);
   if (el) el.textContent = value;
 }
 
-function pick(arr){
+function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-/* ---- Gate (start screen) ---- */
-const gate = $("#gate");
-const openBtn = $("#openBtn");
+// localStorage иногда может быть выключен (инкогнито/встроенный браузер) —
+// тогда доступ к нему кидает исключение и весь JS «умирает».
+// Делаем безопасную обёртку.
+const storage = (() => {
+  try {
+    const k = "__ariana_test__";
+    localStorage.setItem(k, "1");
+    localStorage.removeItem(k);
+    return localStorage;
+  } catch (e) {
+    return {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    };
+  }
+})();
 
-function openGate(){
-  gate.setAttribute("hidden", "true");
-  document.body.style.overflow = "auto";
-  // softly suggest autoplay note if needed
-  $("#autoplayNote")?.removeAttribute("hidden");
-  // small hearts
-  burstHearts(14);
+function ready(fn) {
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
+  else fn();
 }
 
-if (gate){
-  document.body.style.overflow = "hidden";
-  openBtn?.addEventListener("click", openGate);
-  gate.addEventListener("click", (e) => {
-    // click outside card closes too
-    if (e.target === gate) openGate();
-  });
-}
+ready(() => {
+  /* ---- Gate (start screen) ---- */
+  const gate = $("#gate");
+  const openBtn = $("#openBtn");
 
-/* ---- Personalization ---- */
-setText("herNameGate", CONFIG.herName);
-setText("herNameTitle", CONFIG.herName);
-setText("herNameLetter", CONFIG.herNameCute);
-setText("herNameFinal", CONFIG.herName);
-setText("yourName", CONFIG.yourName);
-setText("dateLabel", CONFIG.dateLabel);
+  function openGate() {
+    if (!gate) return;
+    gate.hidden = true;
+    document.body.style.overflow = "auto";
 
-/* ---- Footer year ---- */
-setText("year", String(new Date().getFullYear()));
+    const note = $("#autoplayNote");
+    if (note) note.hidden = false;
 
-/* ---- Music toggle ---- */
-const bgMusic = $("#bgMusic");
-const musicBtn = $("#musicBtn");
-const autoplayNote = $("#autoplayNote");
+    burstHearts(14);
+  }
 
-let musicOn = localStorage.getItem("musicOn") === "1";
+  if (gate) {
+    document.body.style.overflow = "hidden";
 
-async function setMusic(on){
-  musicOn = on;
-  localStorage.setItem("musicOn", on ? "1" : "0");
-  if (!bgMusic || !musicBtn) return;
-
-  musicBtn.setAttribute("aria-pressed", String(on));
-  musicBtn.textContent = on ? "Выключить музыку" : "Включить музыку";
-
-  if (on){
-    try{
-      await bgMusic.play();
-      autoplayNote?.setAttribute("hidden","true");
-    }catch(err){
-      // Autoplay blocked — show note
-      autoplayNote?.removeAttribute("hidden");
+    if (openBtn) {
+      openBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openGate();
+      });
     }
-  } else {
-    bgMusic.pause();
+
+    // ВАЖНО: на GitHub Pages иногда фон оверлея (.gate__bg) может перехватывать клики.
+    // Поэтому открываем, если кликнули в любую область, КРОМЕ самой карточки.
+    gate.addEventListener("click", (e) => {
+      const clickedInsideCard = e.target && e.target.closest && e.target.closest(".gate__card");
+      if (clickedInsideCard) return;
+      openGate();
+    });
   }
-}
 
-musicBtn?.addEventListener("click", () => setMusic(!musicOn));
+  /* ---- Personalization ---- */
+  setText("herNameGate", CONFIG.herName);
+  setText("herNameTitle", CONFIG.herName);
+  setText("herNameLetter", CONFIG.herNameCute);
+  setText("herNameFinal", CONFIG.herName);
+  setText("yourName", CONFIG.yourName);
+  setText("dateLabel", CONFIG.dateLabel);
 
-/* try restore state without being annoying */
-if (musicOn){
-  // only attempt after first interaction (safe)
-  window.addEventListener("pointerdown", () => setMusic(true), { once: true });
-}
+  /* ---- Footer year ---- */
+  setText("year", String(new Date().getFullYear()));
 
-/* ---- Voice controls ---- */
-const voice = $("#voice");
-$("#voicePlayBtn")?.addEventListener("click", async () => {
-  try{
-    // pause bg music for clarity
-    if (bgMusic && !bgMusic.paused) bgMusic.pause();
-    await voice.play();
-  }catch(e){}
-});
-$("#voiceStopBtn")?.addEventListener("click", () => voice?.pause());
+  /* ---- Music toggle ---- */
+  const bgMusic = $("#bgMusic");
+  const musicBtn = $("#musicBtn");
+  const autoplayNote = $("#autoplayNote");
 
-/* ---- Compliments ---- */
-const complimentText = $("#complimentText");
-const newComplimentBtn = $("#newComplimentBtn");
-const copyComplimentBtn = $("#copyComplimentBtn");
+  let musicOn = storage.getItem("musicOn") === "1";
 
-function showCompliment(){
-  if (!complimentText) return;
-  complimentText.textContent = pick(compliments);
-}
+  async function setMusic(on) {
+    musicOn = on;
+    storage.setItem("musicOn", on ? "1" : "0");
 
-newComplimentBtn?.addEventListener("click", () => {
-  showCompliment();
-  burstHearts(8);
-});
-copyComplimentBtn?.addEventListener("click", async () => {
-  const text = complimentText?.textContent || "";
-  try{
-    await navigator.clipboard.writeText(text);
-    copyComplimentBtn.textContent = "Скопировано ✓";
-    setTimeout(() => (copyComplimentBtn.textContent = "Скопировать"), 1200);
-  }catch(e){
-    // ignore
-  }
-});
+    if (!bgMusic || !musicBtn) return;
 
-const list = $("#complimentsList");
-if (list){
-  compliments.forEach((t) => {
-    const div = document.createElement("div");
-    div.className = "listItem";
-    div.textContent = t;
-    list.appendChild(div);
-  });
-}
-showCompliment();
+    musicBtn.setAttribute("aria-pressed", String(on));
+    musicBtn.textContent = on ? "Выключить музыку" : "Включить музыку";
 
-/* ---- Wishes / Quotes ---- */
-const wishList = $("#wishList");
-if (wishList){
-  wishes.forEach((t) => {
-    const li = document.createElement("li");
-    li.textContent = t;
-    wishList.appendChild(li);
-  });
-}
-
-const quotesBox = $("#quotes");
-if (quotesBox){
-  quotes.forEach((t) => {
-    const q = document.createElement("div");
-    q.className = "quote";
-    q.textContent = t;
-    quotesBox.appendChild(q);
-  });
-}
-
-/* ---- Gallery ---- */
-const galleryGrid = $("#galleryGrid");
-let lightboxIndex = 0;
-
-function createGallery(){
-  if (!galleryGrid) return;
-  galleryItems.forEach((it, i) => {
-    const btn = document.createElement("button");
-    btn.className = "gItem";
-    btn.type = "button";
-    btn.setAttribute("data-idx", String(i));
-    btn.setAttribute("aria-label", "Открыть: " + it.cap);
-
-    const img = document.createElement("img");
-    img.src = it.src;
-    img.alt = it.cap;
-    img.loading = "lazy";
-    img.decoding = "async";
-
-    const cap = document.createElement("div");
-    cap.className = "gItem__cap";
-    cap.textContent = it.cap;
-
-    btn.appendChild(img);
-    btn.appendChild(cap);
-
-    // mosaic layout variations
-    if (i === 0) btn.style.gridColumn = "span 6";
-    if (i === 1) btn.style.gridColumn = "span 6";
-    if (i === 3) btn.style.gridColumn = "span 6";
-    if (i === 4) btn.style.gridColumn = "span 6";
-
-    btn.addEventListener("click", () => openLightbox(i));
-    galleryGrid.appendChild(btn);
-  });
-}
-createGallery();
-
-/* ---- Lightbox ---- */
-const lightbox = $("#lightbox");
-const lightboxImg = $("#lightboxImg");
-const lightboxCaption = $("#lightboxCaption");
-
-function openLightbox(i){
-  lightboxIndex = i;
-  if (!lightbox || !lightboxImg) return;
-  const it = galleryItems[i];
-  lightboxImg.src = it.src;
-  lightboxImg.alt = it.cap;
-  lightboxCaption.textContent = it.cap;
-  lightbox.classList.add("is-open");
-  lightbox.setAttribute("aria-hidden","false");
-  burstHearts(10);
-}
-
-function closeLightbox(){
-  lightbox?.classList.remove("is-open");
-  lightbox?.setAttribute("aria-hidden","true");
-}
-
-function stepLightbox(dir){
-  const next = (lightboxIndex + dir + galleryItems.length) % galleryItems.length;
-  openLightbox(next);
-}
-
-$("#lightboxClose")?.addEventListener("click", closeLightbox);
-lightbox?.addEventListener("click", (e) => {
-  if (e.target === lightbox) closeLightbox();
-});
-$("#lightboxPrev")?.addEventListener("click", () => stepLightbox(-1));
-$("#lightboxNext")?.addEventListener("click", () => stepLightbox(1));
-window.addEventListener("keydown", (e) => {
-  if (!lightbox?.classList.contains("is-open")) return;
-  if (e.key === "Escape") closeLightbox();
-  if (e.key === "ArrowLeft") stepLightbox(-1);
-  if (e.key === "ArrowRight") stepLightbox(1);
-});
-
-/* Polaroids open lightbox too */
-$$(".polaroid").forEach((p) => {
-  p.addEventListener("click", () => {
-    const src = p.getAttribute("data-lightbox");
-    const idx = galleryItems.findIndex((x) => x.src === src);
-    if (idx >= 0) openLightbox(idx);
-    else {
-      // fallback: open direct
-      galleryItems.unshift({ src, cap: "Фото" });
-      openLightbox(0);
+    if (on) {
+      try {
+        await bgMusic.play();
+        if (autoplayNote) autoplayNote.hidden = true;
+      } catch (err) {
+        // Autoplay blocked — show note
+        if (autoplayNote) autoplayNote.hidden = false;
+      }
+    } else {
+      bgMusic.pause();
     }
-  });
-});
-
-/* ---- Surprise / Hearts ---- */
-const surpriseBtn = $("#surpriseBtn");
-const confettiBtn = $("#confettiBtn");
-
-function spawnHeart(){
-  const el = document.createElement("div");
-  el.className = "heart";
-  const emojis = ["💗","💖","💕","💞","💘","❤️","✨"];
-  el.textContent = pick(emojis);
-  const x = Math.random() * 100;
-  const s = 0.7 + Math.random() * 1.2;
-  const drift = (-10 + Math.random() * 20) + "vw";
-  const r = (-40 + Math.random() * 80) + "deg";
-  const dur = (6 + Math.random() * 5) + "s";
-
-  el.style.setProperty("--x", x + "vw");
-  el.style.setProperty("--s", s.toFixed(2));
-  el.style.setProperty("--drift", drift);
-  el.style.setProperty("--r", r);
-  el.style.animationDuration = dur;
-
-  el.style.fontSize = (18 + Math.random() * 22) + "px";
-  document.body.appendChild(el);
-
-  setTimeout(() => el.remove(), 12000);
-}
-
-function burstHearts(n = 12){
-  for (let i=0;i<n;i++){
-    setTimeout(spawnHeart, i * 80);
   }
-}
 
-surpriseBtn?.addEventListener("click", () => {
-  burstHearts(22);
+  if (musicBtn) musicBtn.addEventListener("click", () => setMusic(!musicOn));
+
+  // пробуем восстановить музыку после первого клика пользователя
+  if (musicOn) {
+    window.addEventListener(
+      "pointerdown",
+      () => {
+        setMusic(true);
+      },
+      { once: true }
+    );
+  }
+
+  /* ---- Voice controls ---- */
+  const voice = $("#voice");
+  const voicePlayBtn = $("#voicePlayBtn");
+  const voiceStopBtn = $("#voiceStopBtn");
+
+  if (voicePlayBtn) {
+    voicePlayBtn.addEventListener("click", async () => {
+      try {
+        if (bgMusic && !bgMusic.paused) bgMusic.pause();
+        if (voice) await voice.play();
+      } catch (e) {}
+    });
+  }
+
+  if (voiceStopBtn) {
+    voiceStopBtn.addEventListener("click", () => {
+      if (voice) voice.pause();
+    });
+  }
+
+  /* ---- Compliments ---- */
+  const complimentText = $("#complimentText");
+  const newComplimentBtn = $("#newComplimentBtn");
+  const copyComplimentBtn = $("#copyComplimentBtn");
+
+  function showCompliment() {
+    if (!complimentText) return;
+    complimentText.textContent = pick(compliments);
+  }
+
+  if (newComplimentBtn) {
+    newComplimentBtn.addEventListener("click", () => {
+      showCompliment();
+      burstHearts(8);
+    });
+  }
+
+  if (copyComplimentBtn) {
+    copyComplimentBtn.addEventListener("click", async () => {
+      const text = (complimentText && complimentText.textContent) || "";
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          // fallback
+          window.prompt("Скопируй текст:", text);
+        }
+
+        copyComplimentBtn.textContent = "Скопировано ✓";
+        setTimeout(() => (copyComplimentBtn.textContent = "Скопировать"), 1200);
+      } catch (e) {
+        window.prompt("Скопируй текст:", text);
+      }
+    });
+  }
+
+  const list = $("#complimentsList");
+  if (list) {
+    compliments.forEach((t) => {
+      const div = document.createElement("div");
+      div.className = "listItem";
+      div.textContent = t;
+      list.appendChild(div);
+    });
+  }
   showCompliment();
-  // try start music on surprise
-  setMusic(true);
+
+  /* ---- Wishes / Quotes ---- */
+  const wishList = $("#wishList");
+  if (wishList) {
+    wishes.forEach((t) => {
+      const li = document.createElement("li");
+      li.textContent = t;
+      wishList.appendChild(li);
+    });
+  }
+
+  const quotesBox = $("#quotes");
+  if (quotesBox) {
+    quotes.forEach((t) => {
+      const q = document.createElement("div");
+      q.className = "quote";
+      q.textContent = t;
+      quotesBox.appendChild(q);
+    });
+  }
+
+  /* ---- Gallery ---- */
+  const galleryGrid = $("#galleryGrid");
+  let lightboxIndex = 0;
+
+  function createGallery() {
+    if (!galleryGrid) return;
+    galleryItems.forEach((it, i) => {
+      const btn = document.createElement("button");
+      btn.className = "gItem";
+      btn.type = "button";
+      btn.setAttribute("data-idx", String(i));
+      btn.setAttribute("aria-label", "Открыть: " + it.cap);
+
+      const img = document.createElement("img");
+      img.src = it.src;
+      img.alt = it.cap;
+      img.loading = "lazy";
+      img.decoding = "async";
+
+      const cap = document.createElement("div");
+      cap.className = "gItem__cap";
+      cap.textContent = it.cap;
+
+      btn.appendChild(img);
+      btn.appendChild(cap);
+
+      // mosaic layout variations
+      if (i === 0) btn.style.gridColumn = "span 6";
+      if (i === 1) btn.style.gridColumn = "span 6";
+      if (i === 3) btn.style.gridColumn = "span 6";
+      if (i === 4) btn.style.gridColumn = "span 6";
+
+      btn.addEventListener("click", () => openLightbox(i));
+      galleryGrid.appendChild(btn);
+    });
+  }
+  createGallery();
+
+  /* ---- Lightbox ---- */
+  const lightbox = $("#lightbox");
+  const lightboxImg = $("#lightboxImg");
+  const lightboxCaption = $("#lightboxCaption");
+
+  function openLightbox(i) {
+    lightboxIndex = i;
+    if (!lightbox || !lightboxImg) return;
+
+    const it = galleryItems[i];
+    lightboxImg.src = it.src;
+    lightboxImg.alt = it.cap;
+
+    if (lightboxCaption) lightboxCaption.textContent = it.cap;
+
+    lightbox.classList.add("is-open");
+    lightbox.setAttribute("aria-hidden", "false");
+    burstHearts(10);
+  }
+
+  function closeLightbox() {
+    if (!lightbox) return;
+    lightbox.classList.remove("is-open");
+    lightbox.setAttribute("aria-hidden", "true");
+  }
+
+  function stepLightbox(dir) {
+    const next = (lightboxIndex + dir + galleryItems.length) % galleryItems.length;
+    openLightbox(next);
+  }
+
+  const lightboxClose = $("#lightboxClose");
+  const lightboxPrev = $("#lightboxPrev");
+  const lightboxNext = $("#lightboxNext");
+
+  if (lightboxClose) lightboxClose.addEventListener("click", closeLightbox);
+
+  if (lightbox) {
+    lightbox.addEventListener("click", (e) => {
+      if (e.target === lightbox) closeLightbox();
+    });
+  }
+
+  if (lightboxPrev) lightboxPrev.addEventListener("click", () => stepLightbox(-1));
+  if (lightboxNext) lightboxNext.addEventListener("click", () => stepLightbox(1));
+
+  window.addEventListener("keydown", (e) => {
+    if (!lightbox || !lightbox.classList.contains("is-open")) return;
+    if (e.key === "Escape") closeLightbox();
+    if (e.key === "ArrowLeft") stepLightbox(-1);
+    if (e.key === "ArrowRight") stepLightbox(1);
+  });
+
+  /* Polaroids open lightbox too */
+  $$(".polaroid").forEach((p) => {
+    p.addEventListener("click", () => {
+      const src = p.getAttribute("data-lightbox");
+      const idx = galleryItems.findIndex((x) => x.src === src);
+
+      if (idx >= 0) openLightbox(idx);
+      else if (src) {
+        // fallback: open direct
+        galleryItems.unshift({ src, cap: "Фото" });
+        openLightbox(0);
+      }
+    });
+  });
+
+  /* ---- Surprise / Hearts ---- */
+  const surpriseBtn = $("#surpriseBtn");
+  const confettiBtn = $("#confettiBtn");
+
+  function spawnHeart() {
+    const el = document.createElement("div");
+    el.className = "heart";
+
+    const emojis = ["💗", "💖", "💕", "💞", "💘", "❤️", "✨"];
+    el.textContent = pick(emojis);
+
+    const x = Math.random() * 100;
+    const s = 0.7 + Math.random() * 1.2;
+    const drift = -10 + Math.random() * 20 + "vw";
+    const r = -40 + Math.random() * 80 + "deg";
+    const dur = 6 + Math.random() * 5 + "s";
+
+    el.style.setProperty("--x", x + "vw");
+    el.style.setProperty("--s", s.toFixed(2));
+    el.style.setProperty("--drift", drift);
+    el.style.setProperty("--r", r);
+    el.style.animationDuration = dur;
+
+    el.style.fontSize = 18 + Math.random() * 22 + "px";
+
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 12000);
+  }
+
+  function burstHearts(n = 12) {
+    for (let i = 0; i < n; i++) {
+      setTimeout(spawnHeart, i * 80);
+    }
+  }
+
+  if (surpriseBtn) {
+    surpriseBtn.addEventListener("click", () => {
+      burstHearts(22);
+      showCompliment();
+      setMusic(true);
+    });
+  }
+
+  if (confettiBtn) confettiBtn.addEventListener("click", () => burstHearts(24));
+
+  /* little ambient hearts sometimes (not too many) */
+  let ambient = 0;
+  setInterval(() => {
+    if (document.hidden) return;
+    ambient++;
+    if (ambient % 3 === 0) spawnHeart();
+  }, 2500);
+
+  /* Smooth scrolling */
+  document.documentElement.style.scrollBehavior = "smooth";
 });
-
-confettiBtn?.addEventListener("click", () => burstHearts(24));
-
-/* little ambient hearts sometimes (not too many) */
-let ambient = 0;
-setInterval(() => {
-  if (document.hidden) return;
-  ambient++;
-  if (ambient % 3 === 0) spawnHeart();
-}, 2500);
-
-/* Smooth scrolling */
-document.documentElement.style.scrollBehavior = "smooth";
