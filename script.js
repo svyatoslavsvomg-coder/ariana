@@ -1,7 +1,7 @@
 // Ariana Birthday Site — vanilla JS
 
 const CONFIG = {
-  herName: "Ариаша",
+  herName: "Ариана",
   herNameCute: "Арианочка",
   yourName: "Свят❤❤❤", // поменяй на своё имя
   dateLabel: "С Днём Рождения",
