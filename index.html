@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#ff5fa2" />
+  <meta name="description" content="Романтический сайт‑поздравление с музыкой, видео и нашими фотографиями." />
+
+  <meta property="og:title" content="Ариана, с Днём Рождения! 💖" />
+  <meta property="og:description" content="Небольшой романтический сайт‑поздравление — открой, включи музыку и улыбнись." />
+  <meta property="og:image" content="og-image.jpg" />
+  <meta property="og:type" content="website" />
+
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css" />
+  <title>Ариана, с Днём Рождения! 💖</title>
+</head>
+
+<body>
+  <!-- Аудио (автозапуск запрещён на телефонах — включается кнопкой) -->
+  <audio id="bgMusic" src="assets/audio/music.mp3" preload="metadata" loop></audio>
+  <audio id="voice" src="assets/audio/voice.mp3" preload="metadata"></audio>
+
+  <!-- Приветственный экран -->
+  <div class="gate" id="gate" role="dialog" aria-modal="true" aria-label="Открыть поздравление">
+    <div class="gate__card">
+      <div class="gate__badge">💌</div>
+      <h1 class="gate__title">Для <span id="herNameGate">Арианы</span></h1>
+      <p class="gate__text">
+        Нажми кнопку — и откроется маленький романтический сайт‑поздравление.
+        <br/>Можно смотреть с телефона и ноутбука.
+      </p>
+
+      <button class="btn btn--primary" id="openBtn">Открыть поздравление</button>
+
+      <div class="gate__hint">
+        <span class="dot"></span>
+        <span>После открытия можно включить музыку 🎵</span>
+      </div>
+    </div>
+    <div class="gate__bg" aria-hidden="true"></div>
+  </div>
+
+  <header class="hero" id="top">
+    <nav class="nav">
+      <a class="nav__logo" href="#top" aria-label="Наверх">
+        <span class="nav__logoMark">♥</span>
+        <span class="nav__logoText">Ariana Day</span>
+      </a>
+      <div class="nav__actions">
+        <button class="btn btn--ghost" id="musicBtn" aria-pressed="false">Включить музыку</button>
+        <a class="btn btn--ghost" href="#gallery">Фотографии</a>
+        <a class="btn btn--ghost" href="#wishes">Пожелания</a>
+      </div>
+    </nav>
+
+    <div class="hero__content">
+      <div class="hero__glass">
+        <p class="hero__kicker">✨ <span id="dateLabel">С Днём Рождения</span> ✨</p>
+        <h1 class="hero__title">
+          <span id="herNameTitle">Ариана</span>, ты — моё самое тёплое чудо 💗
+        </h1>
+        <p class="hero__subtitle">
+          Этот сайт — как маленькая открытка, только живёт в интернете:
+          с музыкой, видео, фотографиями и кучей комплиментов.
+        </p>
+
+        <div class="hero__buttons">
+          <a class="btn btn--primary" href="#letter">Читать письмо</a>
+          <button class="btn btn--soft" id="surpriseBtn">Сюрприз 💞</button>
+        </div>
+
+        <div class="hero__note" id="autoplayNote" hidden>
+          На телефоне музыка запускается только после нажатия на кнопку — это нормально 🙂
+        </div>
+      </div>
+
+      <div class="hero__polaroids" aria-label="Наши фото">
+        <button class="polaroid" data-lightbox="assets/img/us-2.jpg" aria-label="Открыть фото">
+          <img src="assets/img/us-2.jpg" alt="Фото вместе" loading="lazy" decoding="async"/>
+          <span>мы</span>
+        </button>
+        <button class="polaroid polaroid--tilt" data-lightbox="assets/img/us-1.jpg" aria-label="Открыть фото">
+          <img src="assets/img/us-1.jpg" alt="Фото вместе в лесу" loading="lazy" decoding="async"/>
+          <span>вместе</span>
+        </button>
+        <button class="polaroid" data-lightbox="assets/img/us-3.jpg" aria-label="Открыть фото">
+          <img src="assets/img/us-3.jpg" alt="Фото в зеркале" loading="lazy" decoding="async"/>
+          <span>люблю</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="hero__scroll">
+      <a class="scrollHint" href="#letter" aria-label="Прокрутить вниз">
+        <span class="scrollHint__mouse"></span>
+        <span class="scrollHint__text">вниз</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="section" id="letter">
+      <div class="container">
+        <div class="section__head">
+          <h2 class="section__title">Письмо тебе 💌</h2>
+          <p class="section__desc">
+            Можно оставить как есть или поменять текст под ваши слова (в файле <code>index.html</code>).
+          </p>
+        </div>
+
+        <article class="letter card">
+          <p class="letter__big">
+            <span id="herNameLetter">Арианочка</span>, с Днём Рождения! 💖
+          </p>
+          <p>
+            Ты — человек, рядом с которым всё становится светлее: даже обычные дни превращаются в маленькие праздники.
+            Мне так нравится твоя улыбка, твой взгляд, твоя нежность и то, как ты умеешь делать мир добрее.
+          </p>
+          <p>
+            Я хочу, чтобы этот год принёс тебе много поводов для радости: чтобы мечты сбывались легко,
+            чтобы рядом всегда были те, кто любит тебя и поддерживает, а внутри было спокойствие и уверенность —
+            ты всё сможешь.
+          </p>
+          <p>
+            Спасибо тебе за то, что ты есть. Я рядом. Всегда. ♥
+          </p>
+
+          <div class="letter__sign">
+            <span>С любовью,</span>
+            <span class="letter__name" id="yourName">твой …</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section section--alt" id="compliments">
+      <div class="container">
+        <div class="section__head">
+          <h2 class="section__title">Комплименты, чтобы улыбаться чаще ✨</h2>
+          <p class="section__desc">Нажимай — и будет новый комплимент.</p>
+        </div>
+
+        <div class="compliments">
+          <div class="card complimentCard" aria-live="polite">
+            <div class="complimentCard__tag">💗 комплимент дня</div>
+            <div class="complimentCard__text" id="complimentText">Ты невероятная.</div>
+            <div class="complimentCard__actions">
+              <button class="btn btn--primary" id="newComplimentBtn">Ещё один</button>
+              <button class="btn btn--soft" id="copyComplimentBtn">Скопировать</button>
+            </div>
+          </div>
+
+          <div class="card listCard">
+            <div class="listCard__head">
+              <h3 class="listCard__title">Большой список</h3>
+              <p class="listCard__subtitle">Можно листать — их много 🙂</p>
+            </div>
+            <div class="listCard__list" id="complimentsList" aria-label="Список комплиментов"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="video">
+      <div class="container">
+        <div class="section__head">
+          <h2 class="section__title">Видео‑поздравление 🎬</h2>
+          <p class="section__desc">Нажми play — и смотри прямо здесь.</p>
+        </div>
+
+        <div class="mediaGrid">
+          <div class="card mediaCard">
+            <video class="video" src="assets/video/greeting.mp4" controls playsinline preload="metadata"></video>
+            <div class="mediaCard__caption">Наше видео‑поздравление</div>
+          </div>
+
+          <div class="card mediaCard">
+            <div class="audioBox">
+              <div class="audioBox__title">Голосовое поздравление 🎧</div>
+              <p class="audioBox__text">
+                Если музыка играет — можно поставить на паузу, чтобы лучше слышать голосовое.
+              </p>
+              <div class="audioBox__controls">
+                <button class="btn btn--primary" id="voicePlayBtn">▶ Воспроизвести</button>
+                <button class="btn btn--soft" id="voiceStopBtn">⏸ Пауза</button>
+              </div>
+              <div class="audioBox__mini">
+                <span class="pill">mp3</span>
+                <span class="pill">романтика</span>
+                <span class="pill">любовь</span>
+              </div>
+              <div class="audioBox__hint">Если не запускается — попробуй ещё раз (на телефонах так бывает).</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--alt" id="gallery">
+      <div class="container">
+        <div class="section__head">
+          <h2 class="section__title">Галерея 📸</h2>
+          <p class="section__desc">Нажми на любую картинку, чтобы открыть крупно.</p>
+        </div>
+
+        <div class="gallery" id="galleryGrid">
+          <!-- Заполняется скриптом -->
+        </div>
+
+        <div class="stickers" aria-hidden="true">
+          <img class="sticker sticker--a" src="assets/decor/decor-2.jpg" alt="" loading="lazy" decoding="async" />
+          <img class="sticker sticker--b" src="assets/decor/decor-5.jpg" alt="" loading="lazy" decoding="async" />
+          <img class="sticker sticker--c" src="assets/decor/decor-1.jpg" alt="" loading="lazy" decoding="async" />
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="wishes">
+      <div class="container">
+        <div class="section__head">
+          <h2 class="section__title">Пожелания тебе 🌷</h2>
+          <p class="section__desc">Пусть всё будет красиво, легко и по‑любви.</p>
+        </div>
+
+        <div class="wishesGrid">
+          <div class="card wishCard">
+            <h3 class="wishCard__title">Пусть в этом году будет:</h3>
+            <ul class="wishList" id="wishList"></ul>
+          </div>
+
+          <div class="card wishCard">
+            <h3 class="wishCard__title">И ещё немного тёплых слов…</h3>
+            <div class="quotes" id="quotes"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--alt" id="final">
+      <div class="container">
+        <div class="final card">
+          <h2 class="final__title">С Днём Рождения, <span id="herNameFinal">Ариана</span>! 💞</h2>
+          <p class="final__text">
+            Пусть твоя жизнь будет как любимая песня: красивая, лёгкая и с тем самым припевом,
+            который хочется повторять снова и снова.
+          </p>
+          <p class="final__text final__text--small">
+            Если хочешь — я могу дополнять этот сайт новыми фото и комплиментами хоть каждый месяц 🙂
+          </p>
+
+          <div class="final__actions">
+            <a class="btn btn--primary" href="#top">Наверх</a>
+            <button class="btn btn--soft" id="confettiBtn">Ещё сердечки 💘</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__left">
+        <span class="footer__mark">♥</span>
+        <span>Сделано с любовью</span>
+      </div>
+      <div class="footer__right">
+        <span id="year"></span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Лайтбокс -->
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <button class="lightbox__close" id="lightboxClose" aria-label="Закрыть">×</button>
+    <button class="lightbox__nav lightbox__nav--prev" id="lightboxPrev" aria-label="Предыдущее">‹</button>
+    <img class="lightbox__img" id="lightboxImg" alt="" />
+    <button class="lightbox__nav lightbox__nav--next" id="lightboxNext" aria-label="Следующее">›</button>
+    <div class="lightbox__caption" id="lightboxCaption"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
