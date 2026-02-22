@@ -107,12 +107,19 @@ code{
     url("assets/img/hero-bg.jpg") center/cover no-repeat;
   filter: blur(8px) saturate(1.05);
   opacity:.55;
+
+  /* FIX: фон не должен перехватывать клики и должен быть ниже карточки */
+  z-index: 0;
+  pointer-events: none;
 }
 .gate__card{
   position:relative;
   width:min(560px, 92vw);
   padding: 26px 22px 22px;
   text-align:center;
+
+  /* FIX: карточка выше фона */
+  z-index: 1;
 }
 .gate__badge{
   width:54px;
